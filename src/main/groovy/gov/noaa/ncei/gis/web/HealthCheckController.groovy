@@ -40,7 +40,7 @@ class HealthCheckController {
 
     @RequestMapping (value = "/healthChecks/{id}", method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Secured('ADMIN')
+    @Secured('ROLE_ADMIN')
     public HealthCheck delete(@PathVariable("id") final Long id) {
         println "deleting HealthCheck ${id}..."
         return null
