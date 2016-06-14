@@ -13,5 +13,5 @@ logging.level.org.springframework.test=WARN
 
 security.user.password=mypassword
 security.user.name=admin
-logging.level.org.springframework.security: INFO
+logging.level.org.springframework.security: WARN
 
