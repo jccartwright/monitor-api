@@ -15,7 +15,21 @@ class HealthCheck {
     private Long id
 
     String url
+    Double lastResponseTimeInMs
+    String responseChecksum
 
+    byte[] lastResponse
+
+    //number of times this check has been run
+    Integer checkCount = 0
+    Integer successfulCheckCount = 0
+
+    //TODO should be enum
+    CheckIntervalEnum checkInterval = CheckIntervalEnum.DAILY
+
+    Date lastUpdated
+
+    //status of most recent check
     Boolean success
 
     @ManyToMany
