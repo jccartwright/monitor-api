@@ -18,4 +18,6 @@ interface HealthCheckRepository extends CrudRepository <HealthCheck, Long> {
 
     //find all checks w/o any tag
     List<HealthCheck> findByTagsIsNull()
+
+    List<HealthCheck> findByCheckInterval(CheckIntervalEnum checkInterval)
 }
