@@ -1,6 +1,7 @@
 package gov.noaa.ncei.gis.web
 
 import gov.noaa.ncei.gis.service.HealthCheckService
+import groovy.util.logging.Log4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
 import org.springframework.security.access.annotation.Secured
@@ -16,12 +17,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 import gov.noaa.ncei.gis.domain.*
 import gov.noaa.ncei.gis.service.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /*
  API requirements:
  get a list of healthchecks
+ get a list of healthchecks with tag
+ get a list of failed healthchecks
+ get a list of failed healthchecks with tag
  get a single healthcheck
  create a healthcheck
  update a healthcheck
@@ -33,18 +35,17 @@ import org.slf4j.LoggerFactory
  execute all healthchecks
  */
 
-//TODO use Groovy logger annotation
+@Log4j
 @RestController
 @RequestMapping("/healthChecks")
 class HealthCheckController {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final HealthCheckRepository healthCheckRepository
     private final TagRepository tagRepository
     private final HealthCheckService healthCheckService
 
 
     @Autowired
-    HealthCheckController (HealthCheckRepository healthCheckRepository, TagRepository tagRepository, HealthCheckService) {
+    HealthCheckController (HealthCheckRepository healthCheckRepository, TagRepository tagRepository, HealthCheckService healthCheckService) {
         this.healthCheckRepository = healthCheckRepository
         this.tagRepository = tagRepository
         this.healthCheckService = healthCheckService
@@ -56,23 +57,22 @@ class HealthCheckController {
         @RequestParam(value="tag", required = false) String tag,
         @RequestParam(value="failedOnly", defaultValue = "false") Boolean failedOnly) {
 
-        logger.debug("inside readHealthChecks: tag = ${tag}, failedOnly = ${failedOnly}")
-
+        log.debug("inside readHealthChecks: tag = ${tag}, failedOnly = ${failedOnly}")
 
         if (! tag && ! failedOnly) {
-            println "finding all checks"
+            log.debug "finding all checks..."
             return this.healthCheckRepository.findAll()
 
         } else if (tag && ! failedOnly) {
-            println "finding checks with tag ${tag}"
+            log.debug "finding checks with tag ${tag}"
             return this.healthCheckRepository.findByTagName(tag)
 
         } else if (! tag && failedOnly) {
-            println "finding all failed checks"
+            log.debug "finding all failed checks"
             return this.healthCheckRepository.findBySuccessFalse()
 
         } else if (tag && failedOnly) {
-            println "finding failed checks with tag ${tag}"
+            log.debug "finding failed checks with tag ${tag}"
             return this.healthCheckRepository.findByTagNameAndSuccessFalse(tag)
         } else {
             throw new IllegalStateException("Unexpected condition in readHealthChecks")
@@ -83,12 +83,13 @@ class HealthCheckController {
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     HealthCheck readHealthCheck(@PathVariable Long id) {
         this.validateHealthCheck(id)
+
         return this.healthCheckRepository.findOne(id)
     }
 
 
     @RequestMapping (method = RequestMethod.POST)
-    //@Secured('ROLE_ADMIN')
+    @Secured('ROLE_ADMIN')
     ResponseEntity<?> create(@RequestBody HealthCheck input) {
 
         if (input.tags) {
@@ -107,7 +108,7 @@ class HealthCheckController {
 
 
     @RequestMapping (value = "/{id}", method = RequestMethod.PUT)
-    //@Secured('ROLE_ADMIN')
+    @Secured('ROLE_ADMIN')
     ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody HealthCheck input) {
         this.validateHealthCheck(id)
 
@@ -128,19 +129,23 @@ class HealthCheckController {
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Secured('ROLE_ADMIN')
     void delete(@PathVariable Long id) {
-        this.healthCheckRepository.delete(id)
-        logger.info("deleted HealthCheck ${id}")
-    }
-
-
-    @RequestMapping (value = "/{id}/run", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.OK)
-    //@Secured('ROLE_ADMIN')
-    ResponseEntity<?> execute(@PathVariable("id") Long id) {
         this.validateHealthCheck(id)
 
-        this.healthCheckService.run(id)
+        this.healthCheckRepository.delete(id)
+        log.info("deleted HealthCheck ${id}")
+    }
+
+
+    //TODO require authentication
+    @RequestMapping (value = "/{id}/run", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.OK)
+    @Secured('ROLE_ADMIN')
+    ResponseEntity<?> run(@PathVariable("id") Long id) {
+        this.validateHealthCheck(id)
+
+        this.healthCheckService.runCheck(id)
 
         HttpHeaders httpHeaders = new HttpHeaders()
         httpHeaders.setLocation(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
@@ -148,30 +153,76 @@ class HealthCheckController {
     }
 
 
-    //TODO accept query params to refine list of checks to run
-    @RequestMapping (value = "/run", method = RequestMethod.POST)
-    @ResponseStatus(HttpStatus.OK)
-    //@Secured('ROLE_ADMIN')
-    ResponseEntity<?> executeAll() {
-        this.healthCheckService.runChecks()
+    //TODO handle asynchronously
+    //TODO require authentication
+    @RequestMapping(value = "/run", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    runChecks(
+            @RequestParam(value="tag", required = false) String tag,
+            @RequestParam(value="failedOnly", defaultValue = "false") Boolean failedOnly) {
+
+        if (! tag && ! failedOnly) {
+            log.debug "running checks on all services..."
+            healthCheckService.runChecks(healthCheckRepository.findAll())
+
+        } else if (tag && ! failedOnly) {
+            log.debug "running checks on all services with tag ${tag}..."
+            healthCheckService.runChecks(healthCheckRepository.findByTagName(tag))
+
+        } else if (! tag && failedOnly) {
+            log.debug "running checks on all failed services..."
+            healthCheckService.runChecks(healthCheckRepository.findBySuccessFalse())
+
+        } else if (tag && failedOnly) {
+            log.debug "running checks on failed services with with tag ${tag}..."
+            healthCheckService.runChecks(healthCheckRepository.findByTagNameAndSuccessFalse(tag))
+        } else {
+            throw new IllegalStateException("Unexpected condition in runChecks")
+        }
+    }
+
+
+    //TODO how to best handle JSON, XML responses
+    @RequestMapping(value = "/{id}/lastResponse", method = RequestMethod.GET)
+    ResponseEntity<byte[]> getLastResponse(@PathVariable Long id) {
+        this.validateHealthCheck(id)
+
+        byte[] lastResponse = healthCheckRepository.findOne(id).lastResponse
+        if (! lastResponse) {
+            throw new HealthCheckLastResponseNotFoundException()
+        }
 
         HttpHeaders httpHeaders = new HttpHeaders()
-        httpHeaders.setLocation(ServletUriComponentsBuilder.fromCurrentRequest().build().toUri())
-        return new ResponseEntity<>(null, httpHeaders, HttpStatus.NO_CONTENT);
+        httpHeaders.setContentLength(lastResponse.size())
+        String imageFormat = healthCheckService.determineImageFormat(lastResponse)
+        switch (imageFormat) {
+            case 'png':
+                httpHeaders.setContentType(MediaType.IMAGE_PNG)
+                break
+            case 'gif':
+                httpHeaders.setContentType(MediaType.IMAGE_GIF)
+                break
+            case 'jpg':
+                httpHeaders.setContentType(MediaType.IMAGE_JPEG)
+            default:
+                throw new HealthCheckLastResponseFormatNotRecognizedException(id)
+        }
+        return new ResponseEntity<>(lastResponse, httpHeaders, HttpStatus.OK);
     }
 
 
     @RequestMapping(value = "/{id}/tags", method = RequestMethod.GET)
     Set<Tag> readTags(@PathVariable Long id) {
-        logger.debug("inside readTags: id = ${id}")
+        log.debug("inside readTags: id = ${id}")
         this.validateHealthCheck(id)
         return this.healthCheckRepository.findOne(id).tags
     }
 
 
     @RequestMapping(value = "/{id}/tags", method = RequestMethod.POST)
+    @Secured('ROLE_ADMIN')
     ResponseEntity<?> addTag(@PathVariable Long id, @RequestBody Tag newTag) {
-        logger.debug("inside createTag: id = ${id}")
+        log.debug("inside addTag: id = ${id}")
         this.validateHealthCheck(id)
 
         //TODO validate Tag passed in
@@ -196,8 +247,9 @@ class HealthCheckController {
 
 
     @RequestMapping(value = "/{id}/tags/{tagName}", method = RequestMethod.DELETE)
+    @Secured('ROLE_ADMIN')
     ResponseEntity<?> deleteTag(@PathVariable Long id, @PathVariable String tagName) {
-        logger.debug("inside deleteTag: id = ${id}, tagName = ${tagName}")
+        log.debug("inside deleteTag: id = ${id}, tagName = ${tagName}")
         this.validateHealthCheck(id)
 
         HealthCheck check = this.healthCheckRepository.findOne(id)
@@ -221,11 +273,11 @@ class HealthCheckController {
 
 
     private void validateHealthCheck(Long id) {
-        //this.healthCheckRepository.findById(id).orElseThrow(new HealthCheckNotFoundException(id))
         if (! this.healthCheckRepository.findOne(id)) {
             throw(new HealthCheckNotFoundException(id))
         }
     }
+
 
     //WARNING: mutates passed instance
     private void persistTags(HealthCheck healthCheck) {
@@ -237,7 +289,7 @@ class HealthCheckController {
                 //add pre-existing instance
                 persistedTags.add(tag)
             } else {
-                logger.info("introducing new Tag: ${it.name}...")
+                log.info("introducing new Tag: ${it.name}...")
                 //TODO should we only allow previously created tags to avoid accidental additions?
                 persistedTags.add(this.tagRepository.save(it))
             }
