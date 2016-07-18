@@ -12,6 +12,6 @@ logging.level.org.hibernate=ERROR
 logging.level.org.springframework.test=WARN
 
 security.user.password=mypassword
-security.user.name=admin
+security.user.name=myusername
 logging.level.org.springframework.security: WARN
 
