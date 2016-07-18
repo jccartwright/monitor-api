@@ -1,5 +1,7 @@
 package gov.noaa.ncei.gis.domain
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
@@ -14,11 +16,18 @@ class HealthCheck {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id
 
+    //TODO validate as valid URL
     String url
+
     Double lastResponseTimeInMs
+
+    @JsonIgnore
     String responseChecksum
 
+    @JsonIgnore
     byte[] lastResponse
+
+    String responseContentType
 
     //number of times this check has been run
     Integer checkCount = 0
@@ -40,23 +49,34 @@ class HealthCheck {
 //    private Set<Tag> tags
 
     //explicit getters and setters appear to be required for Spring to create instances from JSON
-    public Long getId() {
+    Long getId() {
         return id;
     }
-    public void setId(Long id) {
+    void setId(Long id) {
         this.id = id;
     }
-    public String getUrl() {
+    String getUrl() {
         return url;
     }
-    public void setUrl(String url) {
+    void setUrl(String url) {
         this.url = url;
     }
-    public Set<Tag> getTags() {
+    Set<Tag> getTags() {
         return tags;
     }
-    public void setTags(Set<Tag> tags) {
+    void setTags(Set<Tag> tags) {
         this.tags = tags;
     }
 
+    String getResponseContentType() {
+        return responseContentType
+    }
+
+    Integer getPercentSuccessful() {
+        if (checkCount && successfulCheckCount) {
+            return ((successfulCheckCount / checkCount) * 100) as Integer
+        } else {
+            return 0
+        }
+    }
 }
