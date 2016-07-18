@@ -23,13 +23,13 @@ public class ScheduledTasksService {
         this.healthCheckRepository = healthCheckRepository
     }
 
-    @Scheduled(fixedRate = 5000L)
-    public void reportCurrentTime() {
-        println("The time is now ${dateFormat.format(new Date())}")
-    }
+//    @Scheduled(fixedRate = 5000L)
+//    public void reportCurrentTime() {
+//        println("The time is now ${dateFormat.format(new Date())}")
+//    }
 
 
-    @Scheduled(cron="0 */5 * * * *")
+    @Scheduled(cron="0 */1 * * * *")
     public void checkEvery5Minutes() {
         List<HealthCheck> checks = healthCheckRepository.findByCheckInterval(CheckIntervalEnum.FIVEMINUTES)
         if (checks.size == 0) {
