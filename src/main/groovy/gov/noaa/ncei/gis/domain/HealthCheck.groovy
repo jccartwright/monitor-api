@@ -1,6 +1,7 @@
 package gov.noaa.ncei.gis.domain
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import org.springframework.http.MediaType
 
 import javax.persistence.Entity
 import javax.persistence.GeneratedValue
@@ -33,7 +34,6 @@ class HealthCheck {
     Integer checkCount = 0
     Integer successfulCheckCount = 0
 
-    //TODO should be enum
     CheckIntervalEnum checkInterval = CheckIntervalEnum.DAILY
 
     Date lastUpdated
@@ -43,10 +43,6 @@ class HealthCheck {
 
     @ManyToMany
     private Set<Tag> tags
-
-//    @OneToMany(cascade=CascadeType.ALL)
-//    @JoinColumn(name="id")
-//    private Set<Tag> tags
 
     //explicit getters and setters appear to be required for Spring to create instances from JSON
     Long getId() {
