@@ -1,6 +1,5 @@
 package gov.noaa.ncei.gis.web
 
-import gov.noaa.ncei.gis.service.HealthCheckService
 import groovy.util.logging.Log4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
@@ -8,7 +7,6 @@ import org.springframework.security.access.annotation.Secured
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.ResponseStatus
-import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -187,27 +185,16 @@ class HealthCheckController {
     ResponseEntity<byte[]> getLastResponse(@PathVariable Long id) {
         this.validateHealthCheck(id)
 
-        byte[] lastResponse = healthCheckRepository.findOne(id).lastResponse
-        if (! lastResponse) {
+        HealthCheck check = healthCheckRepository.findOne(id)
+        if (! check.lastResponse) {
             throw new HealthCheckLastResponseNotFoundException()
         }
 
         HttpHeaders httpHeaders = new HttpHeaders()
-        httpHeaders.setContentLength(lastResponse.size())
-        String imageFormat = healthCheckService.determineImageFormat(lastResponse)
-        switch (imageFormat) {
-            case 'png':
-                httpHeaders.setContentType(MediaType.IMAGE_PNG)
-                break
-            case 'gif':
-                httpHeaders.setContentType(MediaType.IMAGE_GIF)
-                break
-            case 'jpg':
-                httpHeaders.setContentType(MediaType.IMAGE_JPEG)
-            default:
-                throw new HealthCheckLastResponseFormatNotRecognizedException(id)
-        }
-        return new ResponseEntity<>(lastResponse, httpHeaders, HttpStatus.OK);
+        httpHeaders.setContentLength(check.lastResponse.size())
+        def contentType = check.responseContentType.split('/')
+        httpHeaders.setContentType(new MediaType(contentType[0], contentType[1]))
+        return new ResponseEntity<>(check.lastResponse, httpHeaders, HttpStatus.OK);
     }
 
 
