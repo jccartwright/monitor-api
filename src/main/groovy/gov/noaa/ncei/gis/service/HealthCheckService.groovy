@@ -55,6 +55,10 @@ class HealthCheckService {
         if (result.response) {
             healthCheck.lastResponse = result.response
             healthCheck.responseContentType = result.responseContentType
+            //HACK - work around incorrect contenttype in ArcGIS JSON response
+            if (healthCheck.url ==~ /.*f=[json|pjson].*/) {
+                healthCheck.responseContentType = 'application/json'
+            }
         } else {
             healthCheck.lastResponse = null
             healthCheck.responseContentType = null
@@ -98,7 +102,7 @@ class HealthCheckService {
                 result.size = bytes.size()
                 result.md5 = getMd5(bytes)
                 result.response = bytes
-                result.responseContentType = conn.getContentType()
+                result.responseContentType = conn.getContentType().split(';')[0]
                 log.debug "read ${bytes.size()} bytes from ${url}"
             }
         } catch (Exception e) {
