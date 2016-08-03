@@ -10,21 +10,49 @@ buildscript {
 	}
 }
 
+
+plugins {
+    id "org.asciidoctor.convert" version "1.5.3"
+}
+
 apply plugin: 'groovy'
 apply plugin: 'eclipse'
-apply plugin: 'spring-boot' 
+apply plugin: 'spring-boot'
+
+ext['spring-restdocs.version'] = '1.1.0.RELEASE'
+
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
+
+
+test {
+    outputs.dir snippetsDir
+}
+
+asciidoctor {
+    attributes 'snippets': snippetsDir
+    inputs.dir snippetsDir
+    dependsOn test
+}
+
+group = 'gov.noaa.ncei.gis'
 
 jar {
 	baseName = 'monitor-api'
 	version = '1.0.0-SNAPSHOT'
+    dependsOn asciidoctor
+    from ("${asciidoctor.outputDir}/html5") {
+        into 'static/docs'
+    }
 }
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
 	mavenCentral()
 }
-
 
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-actuator')
@@ -36,10 +64,15 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('org.codehaus.groovy:groovy')
 	runtime('org.postgresql:postgresql')
-	testCompile ('com.jayway.restassured:rest-assured:2.9.0' )
+    compile group: 'org.springframework.restdocs', name: 'spring-restdocs-core', version: '1.1.0.RELEASE'
+    testCompile ('com.jayway.restassured:rest-assured:2.9.0' )
 	testCompile('org.springframework.boot:spring-boot-starter-test')
-	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc')
+	testCompile('org.springframework.restdocs:spring-restdocs-mockmvc:1.1.0.RELEASE')
+	testCompile('com.jayway.jsonpath:json-path')
+    testCompile('org.springframework.security:spring-security-test')
 }
+
+
 
 
 eclipse {
