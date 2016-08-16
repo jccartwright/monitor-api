@@ -71,17 +71,57 @@ include::{snippets}/headers-example/response-headers.adoc[]
 Whenever an error response (status code >= 400) is returned, the body will contain a JSON object
 that describes the problem. The error object has the following structure:
 
-include::{snippets}/error-example/response-fields.adoc[]
+|===
+|Path|Type|Description
 
-For example, a request that attempts to apply a non-existent tag to a note will produce a
-`400 Bad Request` response:
+|`error`
+|`String`
+|The HTTP error that occurred, e.g. `Bad Request`
 
-include::{snippets}/error-example/http-response.adoc[]
+|`message`
+|`String`
+|A description of the cause of the error
+
+|`path`
+|`String`
+|The path to which the request was made
+
+|`status`
+|`Number`
+|The HTTP status code, e.g. `404`
+
+|`timestamp`
+|`Number`
+|The time, in milliseconds, at which the error occurred
+
+|`exception`
+|`String`
+|The exception thrown by the server
+
+|===
+
+For example, a request that attempts to retreive a non-existent healthCheck will produce a
+`404 Not Found` response:
+
+[source,http,options="nowrap"]
+----
+HTTP/1.1 404 Not Found
+Content-Type: application/json;charset=UTF-8
+
+{
+  "timestamp": 1471102582993,
+  "status": 404,
+  "error": "Not Found",
+  "exception": "gov.noaa.ncei.gis.web.HealthCheckNotFoundException",
+  "message": "could not find HealthCheck 9999.",
+  "path": "/healthChecks/9999"
+}
+----
 
 [[overview-hypermedia]]
 == Hypermedia
 
-RESTful Notes uses hypermedia and resources include links to other resources in their
+The MapServices Monitor uses hypermedia and resources include links to other resources in their
 responses. Responses are in http://stateless.co/hal_specification.html[Hypertext Application
 from resource to resource.
 Language (HAL)] format. Links can be found beneath the `_links` key. Users of the API should
@@ -121,48 +161,54 @@ include::{snippets}/index-example/links.adoc[]
 
 
 
-[[resources-notes]]
-== Notes
+[[resources-healthCheck]]
+== HealthChecks
 
-The Notes resources is used to create and list notes
+The HealthChecks resource is used to create and list HealthChecks
 
 
 
-[[resources-notes-list]]
-=== Listing notes
+[[resources-healthCheck-list]]
+=== Listing HealthChecks
 
-A `GET` request will list all of the service's notes.
+A `GET` request will list all of the service's HealthChecks.
 
 ==== Response structure
 
-include::{snippets}/notes-list-example/response-fields.adoc[]
+|===
+Type|Description
+
+|`Array`
+|An array of <<resources-healthCheck, HealthCheck resources>>
+
+|===
 
 ==== Example request
 
-include::{snippets}/notes-list-example/curl-request.adoc[]
+include::{snippets}/health-checks-list-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/notes-list-example/http-response.adoc[]
+include::{snippets}/health-checks-list-example/http-response.adoc[]
 
 
 
-[[resources-notes-create]]
-=== Creating a note
+[[resources-healthCheck-create]]
+=== Creating a HealthCheck
 
-A `POST` request is used to create a note
+A `POST` request is used to create a HealthCheck
 
 ==== Request structure
 
-include::{snippets}/notes-create-example/request-fields.adoc[]
+include::{snippets}/healthChecks-create-example/request-fields.adoc[]
 
 ==== Example request
 
-include::{snippets}/notes-create-example/curl-request.adoc[]
+include::{snippets}/healthChecks-create-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/notes-create-example/http-response.adoc[]
+include::{snippets}/healthChecks-create-example/http-response.adoc[]
 
 
 

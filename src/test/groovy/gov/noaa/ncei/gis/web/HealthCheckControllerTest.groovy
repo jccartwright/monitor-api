@@ -1,6 +1,9 @@
 package gov.noaa.ncei.gis.web
 
 import gov.noaa.ncei.gis.Application
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers
+
+import javax.servlet.RequestDispatcher
 import org.junit.*
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,7 +37,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 
 import org.springframework.security.test.context.support.*
-
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*
+import org.springframework.restdocs.JUnitRestDocumentation
+import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.*
+import static org.springframework.restdocs.headers.HeaderDocumentation.*
+import static org.springframework.restdocs.request.RequestDocumentation.*
 
 
 @RunWith(SpringJUnit4ClassRunner)
@@ -51,27 +65,102 @@ class HealthCheckControllerTest {
     private MockRestServiceServer mockServer
     private MockMvc mockMvc
     private MediaType applicationJsonMediaType =
-            new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
+            new MediaType(MediaType.APPLICATION_JSON.getType(), MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"))
+
+    @Rule
+    public final JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation("build/generated-snippets");
+    private RestDocumentationResultHandler documentationHandler;
 
     @Before
     void setup() {
-//        List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
-//        converters.add(new StringHttpMessageConverter());
-//        converters.add(new MappingJackson2HttpMessageConverter());
 
+        this.documentationHandler = document("{method-name}",
+                preprocessRequest(prettyPrint()),
+                preprocessResponse(prettyPrint()));
 
         this.restTemplate = new RestTemplate()
-//        this.restTemplate.setMessageConverters(converters);
+
+        //converters don't seem to be required
+        //List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
+        //converters.add(new StringHttpMessageConverter());
+        //converters.add(new MappingJackson2HttpMessageConverter());
+        //this.restTemplate.setMessageConverters(converters);
+
         this.mockServer = MockRestServiceServer.createServer(this.restTemplate)
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext).apply(springSecurity()).build()
+
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext)
+                .apply(documentationConfiguration(this.restDocumentation))
+                .alwaysDo(this.documentationHandler)
+                .apply(springSecurity())
+                .build();
     }
+
+
+    @Test
+    public void headersExample() throws Exception {
+        mockMvc
+            .perform(get("/"))
+            .andExpect(status().isOk())
+            .andDo(this.documentationHandler.document(
+                responseHeaders(
+                    headerWithName("Content-Type").description("The Content-Type of the payload, e.g. `${applicationJsonMediaType}`")
+                )
+            ))
+    }
+
+
+    @Test
+    public void errorExample() throws Exception {
+        def nonExistentId = 9999
+
+        //throws exception so mock returns null body. When called outside of mock, body contains JSON response
+        MvcResult mvcResult = mockMvc.perform(get('/healthChecks/{id}', nonExistentId))
+        .andExpect(status().isNotFound())
+        //.andDo(MockMvcResultHandlers.print())
+        .andReturn();
+
+        assert mvcResult.resolvedException instanceof HealthCheckNotFoundException
+    }
+
+
+    @Test
+    public void indexExample() throws Exception {
+        mockMvc.perform(get("/"))
+            .andExpect(status().isOk())
+            .andDo(this.documentationHandler.document(
+                links(
+                    linkWithRel("healthChecks").description("The <<resources-healthChecks,HealthChecks resource>>"),
+                    linkWithRel("tags").description("The <<resources-tags,Tags resource>>"),
+                    linkWithRel("profile").description("The <<resources-profile, Application-level profile semantics resource>>")),
+                responseFields(
+                    fieldWithPath("_links").description("<<resources-index-links,Links>> to other resources"))
+            ))
+    }
+
+
+
+    @Test
+    public void healthChecksListExample() throws Exception {
+        this.mockMvc
+            .perform(get("/healthChecks"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(applicationJsonMediaType))
+            .andExpect(jsonPath('$', hasSize(greaterThan(2))))
+            .andDo(documentationHandler.document(requestParameters(
+                parameterWithName("tag").optional().description("find only checks with this tag"),
+                parameterWithName("failedOnly").optional().description("find only checks that are currently failed. Defaults to false")
+            )))
+    }
+
 
     @Test
     public void testGetAllHealthChecks() {
         this.mockMvc.perform(get("/healthChecks"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(applicationJsonMediaType))
-                .andExpect(jsonPath('$', hasSize(3)))
+                .andExpect(jsonPath('$', hasSize(greaterThan(2))))
+                .andDo(document("healthChecks"))
+
 
         //println this.mockMvc.perform(get("/healthChecks")).andReturn().getResponse().contentAsString
     }

@@ -17,7 +17,7 @@ import javax.transaction.Transactional
 class TagRepositoryTest {
     @Autowired
     TagRepository repository
-
+/*
     @Test
     void testFindAll() {
         def results = repository.findAll()
@@ -26,13 +26,15 @@ class TagRepositoryTest {
             println it
         }
     }
-
+*/
     @Test
     void testSave() {
+        def beforeCount = repository.findAll().size()
         repository.save(new Tag(name: 'testme'))
 
         def allTags = repository.findAll()
-        assert allTags.size() == 8
+        println allTags
+        assert allTags.size() == beforeCount + 1
     }
 
     @Test
