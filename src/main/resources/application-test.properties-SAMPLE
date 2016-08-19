@@ -1,0 +1,20 @@
+spring.datasource.url=jdbc:h2:mem:mapservice_monitor
+
+spring.jpa.hibernate.ddl-auto=create
+spring.jpa.properties.hibernate.show_sql=false
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.max_fetch_depth=5
+spring.jpa.properties.hibernate.connection.pool_size=5
+
+logging.pattern.console=%-5level %logger{256} - %msg%n
+logging.level.org.springframework=ERROR
+logging.level.org.hibernate=ERROR
+logging.level.org.apache=ERROR
+logging.level.org.springframework.test=WARN
+logging.level.org.springframework.boot=WARN
+logging.level.gov.noaa.ncei.gis=INFO
+
+security.user.password=mypassword
+security.user.name=admin
+
+my.messageValue=test

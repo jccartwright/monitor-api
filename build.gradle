@@ -65,6 +65,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('org.codehaus.groovy:groovy')
 	runtime('org.postgresql:postgresql')
+    compile("com.h2database:h2")
     testCompile ('com.jayway.restassured:rest-assured:2.9.0' )
 	testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('org.springframework.restdocs:spring-restdocs-mockmvc:1.1.1.RELEASE')

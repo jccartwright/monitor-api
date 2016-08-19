@@ -1,6 +1,11 @@
 package gov.noaa.ncei.gis.web
 
 import gov.noaa.ncei.gis.Application
+import gov.noaa.ncei.gis.domain.HealthCheck
+import gov.noaa.ncei.gis.domain.HealthCheckRepository
+import gov.noaa.ncei.gis.domain.Tag
+import gov.noaa.ncei.gis.domain.TagRepository
+import gov.noaa.ncei.gis.service.HealthCheckService
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 
 import javax.servlet.RequestDispatcher
@@ -60,6 +65,11 @@ class HealthCheckControllerTest {
     @Autowired
     private WebApplicationContext webApplicationContext
 
+    @Autowired
+    private HealthCheckRepository healthCheckRepository
+
+    @Autowired
+    private TagRepository tagRepository
 
     private RestTemplate restTemplate
     private MockRestServiceServer mockServer
@@ -73,6 +83,33 @@ class HealthCheckControllerTest {
 
     @Before
     void setup() {
+        //bootstrap some data
+        assert tagRepository
+        def boulderTag = tagRepository.save(new Tag(name:'boulder'))
+        def arcgisTag = tagRepository.save(new Tag(name:'arcgis'))
+        def wmsTag = tagRepository.save(new Tag(name:'wms'))
+
+        assert healthCheckRepository
+        def healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/rest/services/web_mercator/etopo1_hillshade/MapServer/export?bbox=-120,0,-60,60&bboxSR=4326&format=png&transparent=false&f=image")
+        Set<Tag> tags = new HashSet()
+        tags.add(boulderTag)
+        tags.add(arcgisTag)
+        healthCheck.tags = tags
+        healthCheckRepository.save(healthCheck)
+
+        tags = new HashSet()
+        tags.add(boulderTag)
+        tags.add(wmsTag)
+        healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/services/etopo1/MapServer/WMSServer?request=GetCapabilities&service=WMS")
+        healthCheck.tags = tags
+        healthCheckRepository.save(healthCheck)
+
+        healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/rest/services?f=json")
+        tags = new HashSet()
+        tags.add(arcgisTag)
+        healthCheck.tags = tags
+        healthCheckRepository.save(healthCheck)
+
 
         this.documentationHandler = document("{method-name}",
                 preprocessRequest(prettyPrint()),

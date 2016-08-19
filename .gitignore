@@ -2,4 +2,5 @@
 .idea
 build
 gradle
-**/application.properties
+**/application*.properties
+logs
