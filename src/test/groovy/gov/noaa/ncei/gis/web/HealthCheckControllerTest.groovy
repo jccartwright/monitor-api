@@ -84,32 +84,10 @@ class HealthCheckControllerTest {
     @Before
     void setup() {
         //bootstrap some data
-        assert tagRepository
-        def boulderTag = tagRepository.save(new Tag(name:'boulder'))
-        def arcgisTag = tagRepository.save(new Tag(name:'arcgis'))
-        def wmsTag = tagRepository.save(new Tag(name:'wms'))
-
-        assert healthCheckRepository
-        def healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/rest/services/web_mercator/etopo1_hillshade/MapServer/export?bbox=-120,0,-60,60&bboxSR=4326&format=png&transparent=false&f=image")
-        Set<Tag> tags = new HashSet()
-        tags.add(boulderTag)
-        tags.add(arcgisTag)
-        healthCheck.tags = tags
-        healthCheckRepository.save(healthCheck)
-
-        tags = new HashSet()
-        tags.add(boulderTag)
-        tags.add(wmsTag)
-        healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/services/etopo1/MapServer/WMSServer?request=GetCapabilities&service=WMS")
-        healthCheck.tags = tags
-        healthCheckRepository.save(healthCheck)
-
-        healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/rest/services?f=json")
-        tags = new HashSet()
-        tags.add(arcgisTag)
-        healthCheck.tags = tags
-        healthCheckRepository.save(healthCheck)
-
+        bootstrapTags()
+        bootstrapArcGISCheck()
+        bootstrapWmsCheck()
+        bootstrapCatalogCheck()
 
         this.documentationHandler = document("{method-name}",
                 preprocessRequest(prettyPrint()),
@@ -182,7 +160,7 @@ class HealthCheckControllerTest {
             .perform(get("/healthChecks"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(applicationJsonMediaType))
-            .andExpect(jsonPath('$', hasSize(greaterThan(2))))
+            .andExpect(jsonPath('$', hasSize(3)))
             .andDo(documentationHandler.document(requestParameters(
                 parameterWithName("tag").optional().description("find only checks with this tag"),
                 parameterWithName("failedOnly").optional().description("find only checks that are currently failed. Defaults to false")
@@ -195,7 +173,7 @@ class HealthCheckControllerTest {
         this.mockMvc.perform(get("/healthChecks"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(applicationJsonMediaType))
-                .andExpect(jsonPath('$', hasSize(greaterThan(2))))
+                .andExpect(jsonPath('$', hasSize(3)))
                 .andDo(document("healthChecks"))
 
 
@@ -245,6 +223,47 @@ class HealthCheckControllerTest {
 
         mockMvc.perform(get("/healthChecks"))
                 .andExpect(jsonPath('$', hasSize(3)))
+    }
+
+    void bootstrapTags() {
+        tagRepository.save(new Tag(name:'boulder'))
+        tagRepository.save(new Tag(name:'arcgis'))
+        tagRepository.save(new Tag(name:'wms'))
+    }
+
+    void bootstrapArcGISCheck() {
+        def boulderTag = tagRepository.findByName('boulder')
+        def arcgisTag = tagRepository.findByName('arcgis')
+
+        def healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/rest/services/web_mercator/etopo1_hillshade/MapServer/export?bbox=-120,0,-60,60&bboxSR=4326&format=png&transparent=false&f=image")
+        Set<Tag> tags = new HashSet()
+        tags.add(boulderTag)
+        tags.add(arcgisTag)
+        healthCheck.tags = tags
+        healthCheckRepository.save(healthCheck)
+    }
+
+    void bootstrapWmsCheck() {
+        def boulderTag = tagRepository.findByName('boulder')
+        def wmsTag = tagRepository.findByName('wms')
+
+        Set<Tag> tags = new HashSet()
+        tags.add(boulderTag)
+        tags.add(wmsTag)
+        def healthCheck = new HealthCheck(url:"http://maps.ngdc.noaa.gov/arcgis/services/etopo1/MapServer/WMSServer?request=GetCapabilities&service=WMS")
+        healthCheck.tags = tags
+        healthCheckRepository.save(healthCheck)
+    }
+
+    void bootstrapCatalogCheck() {
+        def boulderTag = tagRepository.findByName('boulder')
+        Set<Tag> tags = new HashSet()
+
+        def healthCheck = new HealthCheck(url: "http://maps.ngdc.noaa.gov/arcgis/rest/services?f=json")
+        tags = new HashSet()
+        tags.add(boulderTag)
+        healthCheck.tags = tags
+        healthCheckRepository.save(healthCheck)
     }
 
 }
