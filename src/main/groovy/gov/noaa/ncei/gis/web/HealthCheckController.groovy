@@ -78,6 +78,8 @@ class HealthCheckController {
             // "object references an unsaved transient" exception
             this.persistTags(input)
         }
+
+        //TODO default checkInterval if not provided?
         this.healthCheckRepository.save(input)
 
         HttpHeaders httpHeaders = new HttpHeaders()
@@ -119,7 +121,6 @@ class HealthCheckController {
     }
 
 
-    //TODO require authentication
     @RequestMapping (value = "/{id}/run", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.OK)
     @Secured('ROLE_ADMIN')
@@ -135,9 +136,9 @@ class HealthCheckController {
 
 
     //TODO handle asynchronously
-    //TODO require authentication
     @RequestMapping(value = "/run", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Secured('ROLE_ADMIN')
     runChecks(
             @RequestParam(value="tag", required = false) String tag,
             @RequestParam(value="failedOnly", defaultValue = "false") Boolean failedOnly) {
