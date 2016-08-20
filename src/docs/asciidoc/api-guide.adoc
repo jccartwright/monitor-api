@@ -138,7 +138,6 @@ not create URIs themselves, instead they should use the above-described links to
 The index provides the entry point into the service.
 
 
-
 [[resources-index-access]]
 === Accessing the index
 
@@ -161,22 +160,24 @@ include::{snippets}/index-example/links.adoc[]
 
 
 
-[[resources-healthCheck]]
+[[resources-healthChecks]]
 == HealthChecks
 
 The HealthChecks resource is used to create and list HealthChecks
 
 
-
-[[resources-healthCheck-list]]
+[[resources-healthChecks-list]]
 === Listing HealthChecks
 
 A `GET` request will list all of the service's HealthChecks.
 
+=== Request parameters
+include::{snippets}/health-checks-list-example/request-parameters.adoc[]
+
 ==== Response structure
 
 |===
-Type|Description
+|Type|Description
 
 |`Array`
 |An array of <<resources-healthCheck, HealthCheck resources>>
@@ -193,169 +194,115 @@ include::{snippets}/health-checks-list-example/http-response.adoc[]
 
 
 
-[[resources-healthCheck-create]]
+[[resources-healthChecks-create]]
 === Creating a HealthCheck
 
 A `POST` request is used to create a HealthCheck
 
 ==== Request structure
 
-include::{snippets}/healthChecks-create-example/request-fields.adoc[]
+include::{snippets}/health-checks-create-example/request-fields.adoc[]
 
 ==== Example request
 
-include::{snippets}/healthChecks-create-example/curl-request.adoc[]
+include::{snippets}/health-checks-create-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/healthChecks-create-example/http-response.adoc[]
+include::{snippets}/health-checks-create-example/http-response.adoc[]
+
+
+[[resources-healthChecks-run]]
+=== Executing all HealthChecks
+
+A `POST` request is used to execute all HealthChecks
+
+==== Example request
+
+include::{snippets}/health-checks-run-example/curl-request.adoc[]
+
+==== Example response
+
+include::{snippets}/health-checks-run-example/http-response.adoc[]
 
 
 
-[[resources-tags]]
-== Tags
+[[resources-health-check]]
+== HealthCheck
+the HealthCheck resources is used to retrieve, update, execute, and delete individual HealthChecks
 
-The Tags resource is used to create and list tags.
+[[resources-health-check-get]]
+=== Retrieving a HealthCheck
 
-
-
-[[resources-tags-list]]
-=== Listing tags
-
-A `GET` request will list all of the service's tags.
+A `GET` request is used to create a HealthCheck
 
 ==== Response structure
 
-include::{snippets}/tags-list-example/response-fields.adoc[]
+include::{snippets}/health-check-get-example/response-fields.adoc[]
 
 ==== Example request
 
-include::{snippets}/tags-list-example/curl-request.adoc[]
+include::{snippets}/health-check-get-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/tags-list-example/http-response.adoc[]
+include::{snippets}/health-check-get-example/http-response.adoc[]
 
 
+[[resources-health-check-delete]]
+=== Deleting a HealthCheck
 
-[[resources-tags-create]]
-=== Creating a tag
-
-A `POST` request is used to create a note
-
-==== Request structure
-
-include::{snippets}/tags-create-example/request-fields.adoc[]
+A `DELETE` request is used to delete a HealthCheck
 
 ==== Example request
 
-include::{snippets}/tags-create-example/curl-request.adoc[]
+include::{snippets}/health-check-delete-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/tags-create-example/http-response.adoc[]
+include::{snippets}/health-check-delete-example/http-response.adoc[]
 
 
+[[resources-health-check-update]]
+=== Updating a HealthCheck
 
-[[resources-note]]
-== Note
-
-The Note resource is used to retrieve, update, and delete individual notes
-
-
-
-[[resources-note-links]]
-=== Links
-
-include::{snippets}/note-get-example/links.adoc[]
-
-
-
-[[resources-note-retrieve]]
-=== Retrieve a note
-
-A `GET` request will retrieve the details of a note
+A `PUT` request is used to create a HealthCheck
 
 ==== Response structure
 
-include::{snippets}/note-get-example/response-fields.adoc[]
+include::{snippets}/health-check-update-example/response-fields.adoc[]
 
 ==== Example request
 
-include::{snippets}/note-get-example/curl-request.adoc[]
+include::{snippets}/health-check-update-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/note-get-example/http-response.adoc[]
+include::{snippets}/health-check-update-example/http-response.adoc[]
 
+[[resources-health-check-get]]
+=== Retrieving a HealthCheck
 
-
-[[resources-note-update]]
-=== Update a note
-
-A `PATCH` request is used to update a note
-
-==== Request structure
-
-include::{snippets}/note-update-example/request-fields.adoc[]
-
-To leave an attribute of a note unchanged, any of the above may be omitted from the request.
-
-==== Example request
-
-include::{snippets}/note-update-example/curl-request.adoc[]
-
-==== Example response
-
-include::{snippets}/note-update-example/http-response.adoc[]
-
-
-[[resources-tag]]
-== Tag
-
-The Tag resource is used to retrieve, update, and delete individual tags
-
-
-
-[[resources-tag-links]]
-=== Links
-
-include::{snippets}/tag-get-example/links.adoc[]
-
-
-
-[[resources-tag-retrieve]]
-=== Retrieve a tag
-
-A `GET` request will retrieve the details of a tag
+A `GET` request is used to create a HealthCheck
 
 ==== Response structure
 
-include::{snippets}/tag-get-example/response-fields.adoc[]
+include::{snippets}/health-check-get-example/response-fields.adoc[]
 
 ==== Example request
 
-include::{snippets}/tag-get-example/curl-request.adoc[]
+include::{snippets}/health-check-get-example/curl-request.adoc[]
 
 ==== Example response
 
-include::{snippets}/tag-get-example/http-response.adoc[]
+include::{snippets}/health-check-get-example/http-response.adoc[]
 
-
-
-[[resources-tag-update]]
-=== Update a tag
-
-A `PATCH` request is used to update a tag
-
-==== Request structure
-
-include::{snippets}/tag-update-example/request-fields.adoc[]
-
-==== Example request
-
-include::{snippets}/tag-update-example/curl-request.adoc[]
-
-==== Example response
-
-include::{snippets}/tag-update-example/http-response.adoc[]
+//TODO add tag
+//TODO remove tag
+//TODO get a list of healthchecks with tag
+//TODO get a list of failed healthchecks
+//TODO get a list of failed healthchecks with tag
+//TODO get list of tags for a single healthcheck
+//TODO add a tag to healthcheck
+//TODO remove a tag from healthcheck
+//TODO execute a single healthcheck
