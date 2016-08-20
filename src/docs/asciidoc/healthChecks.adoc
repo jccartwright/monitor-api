@@ -1,2 +1,0 @@
-HealthChecks
-include::{snippets}/healthChecks/curl-request.adoc[]
