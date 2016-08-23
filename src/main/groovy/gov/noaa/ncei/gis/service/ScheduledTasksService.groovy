@@ -29,10 +29,10 @@ public class ScheduledTasksService {
 //    }
 
 
-    @Scheduled(cron="0 */1 * * * *")
+    @Scheduled(cron="0 */5 * * * *")
     public void checkEvery5Minutes() {
         List<HealthCheck> checks = healthCheckRepository.findByCheckInterval(CheckIntervalEnum.FIVEMINUTES)
-        if (checks.size == 0) {
+        if (checks.size() == 0) {
             log.info("no 5 minute interval checks to run")
             return
         }
@@ -44,7 +44,7 @@ public class ScheduledTasksService {
     @Scheduled(cron="0 */15 * * * *")
     public void checkEvery15Minutes() {
         List<HealthCheck> checks = healthCheckRepository.findByCheckInterval(CheckIntervalEnum.FIFTEENMINUTES)
-        if (checks.size == 0) {
+        if (checks.size() == 0) {
             log.info("no 15 minute interval checks to run")
             return
         }
@@ -56,7 +56,7 @@ public class ScheduledTasksService {
     @Scheduled(cron="0 0 * * * *")
     public void checkHourly() {
         List<HealthCheck> checks = healthCheckRepository.findByCheckInterval(CheckIntervalEnum.HOURLY)
-        if (checks.size == 0) {
+        if (checks.size() == 0) {
             log.info("no hourly checks to run")
             return
         }
