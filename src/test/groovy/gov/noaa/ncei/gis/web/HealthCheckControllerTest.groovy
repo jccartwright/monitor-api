@@ -68,12 +68,6 @@ class HealthCheckControllerTest {
 
     @Before
     void setup() {
-        //bootstrap some data
-        bootstrapTags()
-        bootstrapArcGISCheck()
-        bootstrapWmsCheck()
-        bootstrapCatalogCheck()
-
         this.restTemplate = new RestTemplate()
 
         //converters don't seem to be required
@@ -106,6 +100,11 @@ class HealthCheckControllerTest {
 
     @Test
     void listAllHealthChecks() {
+        bootstrapTags()
+        bootstrapArcGISCheck()
+        bootstrapWmsCheck()
+        bootstrapCatalogCheck()
+
         this.mockMvc.perform(get("/healthChecks"))
             .andExpect(status().isOk())
             .andExpect(content().contentType(applicationJsonMediaType))
@@ -115,7 +114,7 @@ class HealthCheckControllerTest {
 
     @Test
     void createHealthCheck() {
-        String jsonBody = '{ "url":  "http://www.example.com" }'
+        String jsonBody = '{ "url": "http://www.example.com" }'
 
         String checkLocation = mockMvc.perform(post("/healthChecks")
                 .with(httpBasic(username, password))
@@ -133,7 +132,7 @@ class HealthCheckControllerTest {
 
         //test that one more HealthCheck exists than was bootstrapped
         mockMvc.perform(get("/healthChecks"))
-                .andExpect(jsonPath('$', hasSize(4)))
+                .andExpect(jsonPath('$', hasSize(1)))
     }
 
 
@@ -167,7 +166,7 @@ class HealthCheckControllerTest {
 
         //test that still have same number of HealthChecks as were bootstrapped
         mockMvc.perform(get("/healthChecks"))
-                .andExpect(jsonPath('$', hasSize(3)))
+                .andExpect(jsonPath('$', hasSize(0)))
     }
 
 
@@ -182,18 +181,35 @@ class HealthCheckControllerTest {
 
         //test that still have same number of HealthChecks as were bootstrapped
         mockMvc.perform(get("/healthChecks"))
-            .andExpect(jsonPath('$', hasSize(3)))
+            .andExpect(jsonPath('$', hasSize(0)))
     }
 
 
     @Test
     void executeAllHealthChecks() {
+        bootstrapTags()
+        bootstrapArcGISCheck()
+
         this.mockMvc.perform(post("/healthChecks/run")
                 .with(httpBasic(username, password)))
             .andExpect(status().isNoContent())
     }
 
-//TODO delete check
+    @Test
+    void deleteHealthCheck() {
+        def countBeforeCreate = healthCheckRepository.count()
+        def healthCheck = healthCheckRepository.save(new HealthCheck(url: "http://www.example.com"))
+        assert healthCheck.id
+        assert healthCheckRepository.count() > countBeforeCreate
+
+        mockMvc.perform(delete("/healthChecks/{id}", healthCheck.id)
+            .with(httpBasic(username, password)))
+            .andExpect(status().isNoContent())
+        //.andDo(print())
+
+        assert healthCheckRepository.count() == countBeforeCreate
+    }
+
 //TODO update check
 //TODO add tag
 //TODO remove tag
