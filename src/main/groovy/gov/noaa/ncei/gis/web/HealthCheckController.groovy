@@ -15,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 import gov.noaa.ncei.gis.domain.*
 import gov.noaa.ncei.gis.service.*
+import static gov.noaa.ncei.gis.domain.CheckIntervalEnum.*
 
 @Log4j
 @RestController
@@ -79,13 +80,16 @@ class HealthCheckController {
             this.persistTags(input)
         }
 
-        //TODO default checkInterval if not provided?
+
+        //default checkInterval if not provided
+        if (! input.checkInterval) { input.checkInterval = HOURLY }
+
         this.healthCheckRepository.save(input)
 
         HttpHeaders httpHeaders = new HttpHeaders()
         httpHeaders.setLocation(ServletUriComponentsBuilder
-                .fromCurrentRequest().path("/{id}")
-                .buildAndExpand(input.getId()).toUri())
+            .fromCurrentRequest().path("/{id}")
+            .buildAndExpand(input.getId()).toUri())
         return new ResponseEntity<>(null, httpHeaders, HttpStatus.CREATED);
     }
 
@@ -95,13 +99,22 @@ class HealthCheckController {
     ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody HealthCheck input) {
         this.validateHealthCheck(id)
 
-        //TODO validate input
+        //TODO validate URL?
 
         HealthCheck check = this.healthCheckRepository.findOne(id)
 
-        //TODO introspect instead of hard-code fields?
+        println (input.tags)
+        //TODO update tags? alternative to adding/removing tags one at a time?
+        if (input.tags) {
+            //save each Tag instance or replace w/ existing instance to avoid
+            // "object references an unsaved transient" exception
+            this.persistTags(input)
+        }
+
+        //url, tags, checkInterval only relevant information to update
+        check.checkInterval = input.checkInterval
         check.url = input.url
-        check.success = input.success
+        check.tags = input.tags
         this.healthCheckRepository.save(check)
 
         HttpHeaders httpHeaders = new HttpHeaders()
