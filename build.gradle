@@ -17,14 +17,13 @@ plugins {
 }
 
 apply plugin: 'groovy'
-apply plugin: 'eclipse'
 apply plugin: 'spring-boot'
 
-ext['spring-restdocs.version'] = '1.1.1.RELEASE'
+//ext['spring-restdocs.version'] = '1.1.2.RELEASE'
 
 ext {
     snippetsDir = file('build/generated-snippets')
-    springRestdocsVersion = '1.1.1.RELEASE'
+    springRestdocsVersion = '1.1.2.RELEASE'
 }
 
 
@@ -69,19 +68,9 @@ dependencies {
     compile("com.h2database:h2")
     testCompile ('com.jayway.restassured:rest-assured:2.9.0' )
 	testCompile('org.springframework.boot:spring-boot-starter-test')
-    testCompile('org.springframework.restdocs:spring-restdocs-mockmvc:1.1.1.RELEASE')
+    testCompile("org.springframework.restdocs:spring-restdocs-mockmvc:${springRestdocsVersion}")
 	testCompile('com.jayway.jsonpath:json-path')
     testCompile('org.springframework.security:spring-security-test')
-}
-
-
-
-
-eclipse {
-	classpath {
-		 containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
-		 containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
-	}
 }
 
 task wrapper(type: Wrapper) {
