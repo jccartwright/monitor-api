@@ -44,7 +44,7 @@ jar {
 	version = '1.0.0-SNAPSHOT'
     dependsOn asciidoctor
     from ("${asciidoctor.outputDir}/html5") {
-        into 'static/docs'
+        into 'static/api'
     }
 }
 
